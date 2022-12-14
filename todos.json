@@ -1,1 +1,1 @@
-[{"title": "Test", "description": "test", "done": false}, {"title": "Book1", "author": "test1", "read": false}, {"title": "book2", "author": "test2", "read": true}]
+[{"title": "Test", "description": "test", "done": false}, {"title": "Book1", "author": "test1", "read": false}, {"title": "book2", "author": "test2", "read": true}, {"title": "book3", "author": "test", "read": true}]
