@@ -9,6 +9,7 @@ app.config["SECRET_KEY"] = "nininini"
 @app.route("/todos/", methods=["GET", "POST"])
 def todos_list():
     form = TodoForm()
+    print(form)
     error = ""
     if request.method == "POST":
         if form.validate_on_submit():
