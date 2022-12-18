@@ -29,4 +29,12 @@ class Todos:
         self.save_all()
 
 
+    def delete(self, id):
+        todo = self.get(id)
+        if todo:
+            self.todos.remove(todo)
+            self.save_all()
+            return True
+        return False
+
 todos = Todos()

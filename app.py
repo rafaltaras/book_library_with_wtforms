@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, jsonify, abort, make_response
 
 from lib.forms import TodoForm
 from lib.models import todos
@@ -21,7 +21,7 @@ def todos_list():
 
 @app.route("/todos/<int:todo_id>/", methods=["GET", "POST"])
 def todo_details(todo_id):
-    todo = todos.get(todo_id - 1)
+    todo = todos.get(todo_id-1)
     form = TodoForm(data=todo)
 
     if request.method == "POST":
@@ -29,6 +29,79 @@ def todo_details(todo_id):
             todos.update(todo_id - 1, form.data)
         return redirect(url_for("todos_list"))
     return render_template("todo.html", form=form, todo_id=todo_id)
+
+
+#Użycie REST API
+
+@app.route("/api/v1/todos/", methods=["GET"])
+def todos_list_api_v1():
+    return todos.all()
+
+
+@app.route("/api/v1/todos/<int:todo_id>", methods=["GET"])
+def get_todo(todo_id):
+    if todo_id <= len(todos.all()):
+        todo = todos.get(todo_id -1)
+    else:
+        abort(404)
+    return jsonify({"todo": todo})
+
+
+@app.route("/api/v1/todos/", methods=["POST"])
+def create_todo():
+    if not request.json or not 'title' in request.json:
+        abort(400)
+    todo = {
+        'title': request.json['title'],
+        'author': request.json.get('author', ""),
+        'read': False,
+        'csrf_token': ""
+    }
+    todos.create(todo)
+    todos.save_all()
+    return jsonify({'todo': todo}), 201
+
+
+@app.route("/api/v1/todos/<int:todo_id>", methods=['DELETE'])
+def delete_todo(todo_id):
+    result = todos.delete(todo_id -1)
+    if not result:
+        abort(404)
+    return jsonify({'result': result})
+
+
+@app.route("/api/v1/todos/<int:todo_id>", methods=["PUT"])
+def update_todo(todo_id):
+    todo = todos.get(todo_id -1)
+    # elif not request.json:
+    #     abort(400)
+    data = request.json
+    
+    if todo_id <= len(todos.all()):
+        if any([
+            'title' in data and not isinstance(data.get('title'), str),
+            'author' in data and not isinstance(data.get('author'), str),
+            'read' in data and not isinstance(data.get('read'), bool)
+        ]):
+            abort(400)
+        todo = {
+            'title': data.get('title', todo['title']),
+            'author': data.get('author', todo['author']),
+            'read': data.get('read', todo['read']),
+            'csrf_token': ""
+        }
+        todos.update(todo_id -1, todo)
+    else:
+        abort(404)
+    return jsonify({'todo': todo})
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found', 'status_code': 404}), 404)
+@app.errorhandler(400)
+def bad_request(error):
+    return make_response(jsonify({'error': 'Bad request', 'status_code': 400}), 400)
 
 
 if __name__ == "__main__":
