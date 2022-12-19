@@ -73,10 +73,9 @@ def delete_todo(todo_id):
 @app.route("/api/v1/todos/<int:todo_id>", methods=["PUT"])
 def update_todo(todo_id):
     todo = todos.get(todo_id -1)
-    # elif not request.json:
-    #     abort(400)
-    data = request.json
-    
+    if not request.json:
+        abort(400)       
+    data = request.json  
     if todo_id <= len(todos.all()):
         if any([
             'title' in data and not isinstance(data.get('title'), str),
